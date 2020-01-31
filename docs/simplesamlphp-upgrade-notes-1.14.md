@@ -5,6 +5,8 @@ The `mcrypt` extension is no longer required by SimpleSAMLphp, so if no signatur
 can be skipped. It is still a requirement for `xmlseclibs` though, so for those verifying or creating signed
 documents, or using encryption, it is still needed.
 
+The `mbstring` extension is now required starting on SimpleSAMLphp 1.14.12.
+
 PHP session cookies are now set to HTTP-only by default. This relates to the `session.phpsession.httponly`
 configuration option.
 
@@ -17,7 +19,7 @@ The jQuery version in use has been bumped to the latest 1.8.X version.
 Service Providers using the eduPersonTargetedID attribute, will get a DOMNodeList object instead of the NameID value. In
 order to process the NameID, a SAML2_XML_saml_NameID object can be used:
 
-```php
+```
 $attributes = $as->getAttributes();
 $eptid = $attributes['eduPersonTargetedID'][0]->item(0);
 $nameID = new SAML2_XML_saml_NameID($eptid);

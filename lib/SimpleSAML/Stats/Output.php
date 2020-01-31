@@ -1,20 +1,25 @@
 <?php
 
+declare(strict_types=1);
+
+namespace SimpleSAML\Stats;
+
+use SimpleSAML\Configuration;
 
 /**
  * Interface for statistics outputs.
  *
  * @package SimpleSAMLphp
  */
-abstract class SimpleSAML_Stats_Output
-{
 
+abstract class Output
+{
     /**
      * Initialize the output.
      *
-     * @param SimpleSAML_Configuration $config The configuration for this output.
+     * @param \SimpleSAML\Configuration $config The configuration for this output.
      */
-    public function __construct(SimpleSAML_Configuration $config)
+    public function __construct(Configuration $config)
     {
         // do nothing by default
     }

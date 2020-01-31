@@ -1,14 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
+namespace SimpleSAML\Module\saml\Auth\Process;
+
+use SAML2\Constants;
+use SimpleSAML\Error;
 
 /**
  * Authentication processing filter to create an attribute from a NameID.
  *
  * @package SimpleSAMLphp
  */
-class sspmod_saml_Auth_Process_NameIDAttribute extends SimpleSAML_Auth_ProcessingFilter
-{
 
+class NameIDAttribute extends \SimpleSAML\Auth\ProcessingFilter
+{
     /**
      * The attribute we should save the NameID in.
      *
@@ -34,7 +40,7 @@ class sspmod_saml_Auth_Process_NameIDAttribute extends SimpleSAML_Auth_Processin
     public function __construct($config, $reserved)
     {
         parent::__construct($config, $reserved);
-        assert('is_array($config)');
+        assert(is_array($config));
 
         if (isset($config['attribute'])) {
             $this->attribute = (string) $config['attribute'];
@@ -58,13 +64,11 @@ class sspmod_saml_Auth_Process_NameIDAttribute extends SimpleSAML_Auth_Processin
      * @param string $format The format string.
      * @return array The format string broken into its individual components.
      *
-     * @throws SimpleSAML_Error_Exception if the replacement is invalid.
+     * @throws \SimpleSAML\Error\Exception if the replacement is invalid.
      */
-    private static function parseFormat($format)
+    private static function parseFormat(string $format): array
     {
-        assert('is_string($format)');
-
-        $ret = array();
+        $ret = [];
         $pos = 0;
         while (($next = strpos($format, '%', $pos)) !== false) {
             $ret[] = substr($format, $pos, $next - $pos);
@@ -87,7 +91,7 @@ class sspmod_saml_Auth_Process_NameIDAttribute extends SimpleSAML_Auth_Processin
                     $ret[] = '%';
                     break;
                 default:
-                    throw new SimpleSAML_Error_Exception('NameIDAttribute: Invalid replacement: "%'.$replacement.'"');
+                    throw new Error\Exception('NameIDAttribute: Invalid replacement: "%' . $replacement . '"');
             }
 
             $pos = $next + 2;
@@ -102,29 +106,29 @@ class sspmod_saml_Auth_Process_NameIDAttribute extends SimpleSAML_Auth_Processin
      * Convert NameID to attribute.
      *
      * @param array &$state The request state.
+     * @return void
      */
     public function process(&$state)
     {
-        assert('is_array($state)');
-        assert('isset($state["Source"]["entityid"])');
-        assert('isset($state["Destination"]["entityid"])');
+        assert(is_array($state));
+        assert(isset($state['Source']['entityid']));
+        assert(isset($state['Destination']['entityid']));
 
         if (!isset($state['saml:sp:NameID'])) {
             return;
         }
 
         $rep = $state['saml:sp:NameID'];
-        assert('isset($rep["Value"])');
-
-        $rep['%'] = '%';
-        if (!isset($rep['Format'])) {
-            $rep['Format'] = \SAML2\Constants::NAMEID_UNSPECIFIED;
+        assert(!is_null($rep->getValue()));
+        $rep->{'%'} = '%';
+        if ($rep->getFormat() !== null) {
+            $rep->setFormat(Constants::NAMEID_UNSPECIFIED);
         }
-        if (!isset($rep['NameQualifier'])) {
-            $rep['NameQualifier'] = $state['Source']['entityid'];
+        if ($rep->getNameQualifier() !== null) {
+            $rep->setNameQualifier($state['Source']['entityid']);
         }
-        if (!isset($rep['SPNameQualifier'])) {
-            $rep['SPNameQualifier'] = $state['Destination']['entityid'];
+        if ($rep->getSPNameQualifier() !== null) {
+            $rep->setSPNameQualifier($state['Destination']['entityid']);
         }
 
         $value = '';
@@ -133,11 +137,11 @@ class sspmod_saml_Auth_Process_NameIDAttribute extends SimpleSAML_Auth_Processin
             if ($isString) {
                 $value .= $element;
             } else {
-                $value .= $rep[$element];
+                $value .= call_user_func([$rep, 'get' . $element]);
             }
             $isString = !$isString;
         }
 
-        $state['Attributes'][$this->attribute] = array($value);
+        $state['Attributes'][$this->attribute] = [$value];
     }
 }

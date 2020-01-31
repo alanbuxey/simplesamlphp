@@ -1,9 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace SimpleSAML\Test\Store;
 
-use \SimpleSAML_Configuration as Configuration;
-use \SimpleSAML\Store;
+use PHPUnit\Framework\TestCase;
+use ReflectionClass;
+use SimpleSAML\Configuration;
+use SimpleSAML\Store;
 
 /**
  * Tests for the SQL store.
@@ -14,21 +18,26 @@ use \SimpleSAML\Store;
  * @author Sergio Gómez <sergio@uco.es>
  * @package simplesamlphp/simplesamlphp
  */
-class SQLTest extends \PHPUnit_Framework_TestCase
+class SQLTest extends TestCase
 {
+    /**
+     * @return void
+     */
     protected function setUp()
     {
-        \SimpleSAML_Configuration::loadFromArray(array(
+        Configuration::loadFromArray([
             'store.type'                    => 'sql',
             'store.sql.dsn'                 => 'sqlite::memory:',
             'store.sql.prefix'              => 'phpunit_',
-        ), '[ARRAY]', 'simplesaml');
+        ], '[ARRAY]', 'simplesaml');
     }
+
 
     /**
      * @covers \SimpleSAML\Store::getInstance
      * @covers \SimpleSAML\Store\SQL::__construct
      * @test
+     * @return void
      */
     public function SQLInstance()
     {
@@ -37,10 +46,12 @@ class SQLTest extends \PHPUnit_Framework_TestCase
         $this->assertInstanceOf('SimpleSAML\Store\SQL', $store);
     }
 
+
     /**
      * @covers \SimpleSAML\Store\SQL::initTableVersionTable
      * @covers \SimpleSAML\Store\SQL::initKVTable
      * @test
+     * @return void
      */
     public function kvstoreTableVersion()
     {
@@ -49,12 +60,14 @@ class SQLTest extends \PHPUnit_Framework_TestCase
 
         $version = $store->getTableVersion('kvstore');
 
-        $this->assertEquals(1, $version);
+        $this->assertEquals(2, $version);
     }
+
 
     /**
      * @covers \SimpleSAML\Store\SQL::getTableVersion
      * @test
+     * @return void
      */
     public function newTableVersion()
     {
@@ -66,10 +79,12 @@ class SQLTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(0, $version);
     }
 
+
     /**
      * @covers \SimpleSAML\Store\SQL::setTableVersion
      * @covers \SimpleSAML\Store\SQL::insertOrUpdate
      * @test
+     * @return void
      */
     public function testSetTableVersion()
     {
@@ -82,9 +97,11 @@ class SQLTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(2, $version);
     }
 
+
     /**
      * @covers \SimpleSAML\Store\SQL::get
      * @test
+     * @return void
      */
     public function testGetEmptyData()
     {
@@ -93,31 +110,35 @@ class SQLTest extends \PHPUnit_Framework_TestCase
 
         $value = $store->get('test', 'foo');
 
-        $this->assertEquals(null, $value);
+        $this->assertNull($value);
     }
+
 
     /**
      * @covers \SimpleSAML\Store\SQL::get
      * @covers \SimpleSAML\Store\SQL::set
      * @covers \SimpleSAML\Store\SQL::insertOrUpdate
      * @test
+     * @return void
      */
     public function testInsertData()
     {
         /** @var \SimpleSAML\Store\SQL $store */
         $store = Store::getInstance();
-        
+
         $store->set('test', 'foo', 'bar');
         $value = $store->get('test', 'foo');
-        
+
         $this->assertEquals('bar', $value);
     }
+
 
     /**
      * @covers \SimpleSAML\Store\SQL::get
      * @covers \SimpleSAML\Store\SQL::set
      * @covers \SimpleSAML\Store\SQL::insertOrUpdate
      * @test
+     * @return void
      */
     public function testOverwriteData()
     {
@@ -131,12 +152,14 @@ class SQLTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('baz', $value);
     }
 
+
     /**
      * @covers \SimpleSAML\Store\SQL::get
      * @covers \SimpleSAML\Store\SQL::set
      * @covers \SimpleSAML\Store\SQL::insertOrUpdate
      * @covers \SimpleSAML\Store\SQL::delete
      * @test
+     * @return void
      */
     public function testDeleteData()
     {
@@ -147,8 +170,9 @@ class SQLTest extends \PHPUnit_Framework_TestCase
         $store->delete('test', 'foo');
         $value = $store->get('test', 'foo');
 
-        $this->assertEquals(null, $value);
+        $this->assertNull($value);
     }
+
 
     /**
      * @covers \SimpleSAML\Store\SQL::get
@@ -156,6 +180,7 @@ class SQLTest extends \PHPUnit_Framework_TestCase
      * @covers \SimpleSAML\Store\SQL::insertOrUpdate
      * @covers \SimpleSAML\Store\SQL::delete
      * @test
+     * @return void
      */
     public function testVeryLongKey()
     {
@@ -167,21 +192,33 @@ class SQLTest extends \PHPUnit_Framework_TestCase
         $store->delete('test', $key);
         $value = $store->get('test', $key);
 
-        $this->assertEquals(null, $value);
+        $this->assertNull($value);
     }
 
+
+    /**
+     * @return void
+     */
     protected function tearDown()
     {
         $config = Configuration::getInstance();
+
+        /** @var \SimpleSAML\Store\SQL $store */
         $store = Store::getInstance();
 
-        $this->clearInstance($config, '\SimpleSAML_Configuration');
-        $this->clearInstance($store, '\SimpleSAML\Store');
+        $this->clearInstance($config, Configuration::class);
+        $this->clearInstance($store, Store::class);
     }
 
+
+    /**
+     * @param \SimpleSAML\Configuration|\SimpleSAML\Store $service
+     * @param class-string $className
+     * @return void
+     */
     protected function clearInstance($service, $className)
     {
-        $reflectedClass = new \ReflectionClass($className);
+        $reflectedClass = new ReflectionClass($className);
         $reflectedInstance = $reflectedClass->getProperty('instance');
         $reflectedInstance->setAccessible(true);
         $reflectedInstance->setValue($service, null);

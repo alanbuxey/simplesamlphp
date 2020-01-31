@@ -1,133 +1,153 @@
 <?php
 
+declare(strict_types=1);
+
 namespace SimpleSAML\Test;
 
-use \SimpleSAML_Configuration as Configuration;
-use \SimpleSAML\Store;
+use PHPUnit\Framework\TestCase;
+use ReflectionClass;
+use SimpleSAML\Configuration;
+use SimpleSAML\Error\CriticalConfigurationError;
+use SimpleSAML\Store;
 
 /**
  * Tests for the Store abstract class.
  *
- * For the full copyright and license information, please view the LICENSE file that was distributed with this source
- * code.
+ * For the full copyright and license information, please view the LICENSE file that was
+ * distributed with this source code.
  *
  * @author Sergio Gómez <sergio@uco.es>
  * @package simplesamlphp/simplesamlphp
  */
-class StoreTest extends \PHPUnit_Framework_TestCase
+class StoreTest extends TestCase
 {
     /**
      * @covers \SimpleSAML\Store::getInstance
      * @test
+     * @return void
      */
     public function defaultStore()
     {
-        Configuration::loadFromArray(array(
-        ), '[ARRAY]', 'simplesaml');
+        Configuration::loadFromArray([], '[ARRAY]', 'simplesaml');
 
+        /** @var false $store */
         $store = Store::getInstance();
 
-        $this->assertEquals(false, $store);
+        $this->assertFalse($store);
     }
 
 
     /**
      * @covers \SimpleSAML\Store::getInstance
      * @test
+     * @return void
      */
     public function phpSessionStore()
     {
-        Configuration::loadFromArray(array(
-        ), '[ARRAY]', 'simplesaml');
+        Configuration::loadFromArray([], '[ARRAY]', 'simplesaml');
 
+        /** @var false $store */
         $store = Store::getInstance();
 
-        $this->assertEquals(false, $store);
+        $this->assertFalse($store);
     }
 
 
     /**
      * @covers \SimpleSAML\Store::getInstance
      * @test
+     * @return void
      */
     public function memcacheStore()
     {
-        Configuration::loadFromArray(array(
+        Configuration::loadFromArray([
             'store.type'                    => 'memcache',
-        ), '[ARRAY]', 'simplesaml');
+        ], '[ARRAY]', 'simplesaml');
 
         $store = Store::getInstance();
 
-        $this->assertInstanceOf('\SimpleSAML\Store\Memcache', $store);
+        $this->assertInstanceOf(Store\Memcache::class, $store);
     }
 
 
     /**
      * @covers \SimpleSAML\Store::getInstance
      * @test
+     * @return void
      */
     public function sqlStore()
     {
-        Configuration::loadFromArray(array(
+        Configuration::loadFromArray([
             'store.type'                    => 'sql',
             'store.sql.dsn'                 => 'sqlite::memory:',
             'store.sql.prefix'              => 'phpunit_',
-        ), '[ARRAY]', 'simplesaml');
+        ], '[ARRAY]', 'simplesaml');
 
         $store = Store::getInstance();
 
-        $this->assertInstanceOf('SimpleSAML\Store\SQL', $store);
+        $this->assertInstanceOf(Store\SQL::class, $store);
     }
 
 
     /**
      * @covers \SimpleSAML\Store::getInstance
      * @test
+     * @return void
      */
     public function pathStore()
     {
-        Configuration::loadFromArray(array(
+        Configuration::loadFromArray([
             'store.type'                    => '\SimpleSAML\Store\SQL',
             'store.sql.dsn'                 => 'sqlite::memory:',
             'store.sql.prefix'              => 'phpunit_',
-        ), '[ARRAY]', 'simplesaml');
+        ], '[ARRAY]', 'simplesaml');
 
         $store = Store::getInstance();
 
-        $this->assertInstanceOf('SimpleSAML\Store\SQL', $store);
+        $this->assertInstanceOf(Store\SQL::class, $store);
     }
 
 
     /**
      * @covers \SimpleSAML\Store::getInstance
-     * @expectedException \SimpleSAML\Error\CriticalConfigurationError
      * @test
+     * @return void
      */
     public function notFoundStoreException()
     {
-        Configuration::loadFromArray(array(
+        $this->expectException(CriticalConfigurationError::class);
+        Configuration::loadFromArray([
             'store.type'                    => '\Test\SimpleSAML\Store\Dummy',
             'store.sql.dsn'                 => 'sqlite::memory:',
             'store.sql.prefix'              => 'phpunit_',
-        ), '[ARRAY]', 'simplesaml');
+        ], '[ARRAY]', 'simplesaml');
 
         Store::getInstance();
     }
 
 
+    /**
+     * @return void
+     */
     protected function tearDown()
     {
         $config = Configuration::getInstance();
+        /** @var \SimpleSAML\Store $store */
         $store = Store::getInstance();
 
-        $this->clearInstance($config, '\SimpleSAML_Configuration');
-        $this->clearInstance($store, '\SimpleSAML\Store');
+        $this->clearInstance($config, Configuration::class);
+        $this->clearInstance($store, Store::class);
     }
 
 
+    /**
+     * @param \SimpleSAML\Configuration|\SimpleSAML\Store $service
+     * @param class-string $className
+     * @return void
+     */
     protected function clearInstance($service, $className)
     {
-        $reflectedClass = new \ReflectionClass($className);
+        $reflectedClass = new ReflectionClass($className);
         $reflectedInstance = $reflectedClass->getProperty('instance');
         $reflectedInstance->setAccessible(true);
         $reflectedInstance->setValue($service, null);

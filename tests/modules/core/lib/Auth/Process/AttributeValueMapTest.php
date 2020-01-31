@@ -1,15 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace SimpleSAML\Test\Module\core\Auth\Process;
 
+use PHPUnit\Framework\TestCase;
 use SimpleSAML\Module\core\Auth\Process\AttributeValueMap;
 
 /**
  * Test for the core:AttributeValueMap filter.
  */
-class AttributeValueMapTest extends \PHPUnit_Framework_TestCase
+class AttributeValueMapTest extends TestCase
 {
-
     /**
      * Helper function to run the filter with a given configuration.
      *
@@ -30,29 +32,30 @@ class AttributeValueMapTest extends \PHPUnit_Framework_TestCase
      *
      * @covers SimpleSAML\Module\core\Auth\Process\AttributeValueMap::__construct
      * @covers SimpleSAML\Module\core\Auth\Process\AttributeValueMap::process
+     * @return void
      */
     public function testBasic()
     {
-        $config = array(
+        $config = [
             'sourceattribute' => 'memberOf',
             'targetattribute' => 'eduPersonAffiliation',
-            'values' => array(
-                'member' => array(
+            'values' => [
+                'member' => [
                     'theGroup',
                     'otherGroup',
-                ),
-            ),
-        );
-        $request = array(
-            'Attributes' => array(
-                'memberOf' => array('theGroup'),
-            ),
-        );
+                ],
+            ],
+        ];
+        $request = [
+            'Attributes' => [
+                'memberOf' => ['theGroup'],
+            ],
+        ];
         $result = self::processFilter($config, $request);
         $attributes = $result['Attributes'];
         $this->assertArrayNotHasKey('memberOf', $attributes);
         $this->assertArrayHasKey('eduPersonAffiliation', $attributes);
-        $this->assertEquals($attributes['eduPersonAffiliation'], array('member'));
+        $this->assertEquals($attributes['eduPersonAffiliation'], ['member']);
     }
 
 
@@ -61,30 +64,31 @@ class AttributeValueMapTest extends \PHPUnit_Framework_TestCase
      *
      * @covers SimpleSAML\Module\core\Auth\Process\AttributeValueMap::__construct
      * @covers SimpleSAML\Module\core\Auth\Process\AttributeValueMap::process
+     * @return void
      */
     public function testNoDuplicates()
     {
-        $config = array(
+        $config = [
             'sourceattribute' => 'memberOf',
             'targetattribute' => 'eduPersonAffiliation',
-            'values' => array(
-                'member' => array(
+            'values' => [
+                'member' => [
                     'theGroup',
                     'otherGroup',
-                ),
-            ),
-        );
-        $request = array(
-            'Attributes' => array(
-                'memberOf' => array('theGroup', 'otherGroup'),
-                'eduPersonAffiliation' => array('member', 'someValue'),
-            ),
-        );
+                ],
+            ],
+        ];
+        $request = [
+            'Attributes' => [
+                'memberOf' => ['theGroup', 'otherGroup'],
+                'eduPersonAffiliation' => ['member', 'someValue'],
+            ],
+        ];
         $result = self::processFilter($config, $request);
         $attributes = $result['Attributes'];
         $this->assertArrayNotHasKey('memberOf', $attributes);
         $this->assertArrayHasKey('eduPersonAffiliation', $attributes);
-        $this->assertEquals($attributes['eduPersonAffiliation'], array('member', 'someValue'));
+        $this->assertEquals($attributes['eduPersonAffiliation'], ['member', 'someValue']);
     }
 
 
@@ -93,31 +97,32 @@ class AttributeValueMapTest extends \PHPUnit_Framework_TestCase
      *
      * @covers SimpleSAML\Module\core\Auth\Process\AttributeValueMap::__construct
      * @covers SimpleSAML\Module\core\Auth\Process\AttributeValueMap::process
+     * @return void
      */
     public function testReplace()
     {
-        $config = array(
+        $config = [
             'sourceattribute' => 'memberOf',
             'targetattribute' => 'eduPersonAffiliation',
             '%replace',
-            'values' => array(
-                'member' => array(
+            'values' => [
+                'member' => [
                     'theGroup',
                     'otherGroup',
-                ),
-            ),
-        );
-        $request = array(
-            'Attributes' => array(
-                'memberOf' => array('theGroup'),
-                'eduPersonAffiliation' => array('someValue'),
-            ),
-        );
+                ],
+            ],
+        ];
+        $request = [
+            'Attributes' => [
+                'memberOf' => ['theGroup'],
+                'eduPersonAffiliation' => ['someValue'],
+            ],
+        ];
         $result = self::processFilter($config, $request);
         $attributes = $result['Attributes'];
         $this->assertArrayNotHasKey('memberOf', $attributes);
         $this->assertArrayHasKey('eduPersonAffiliation', $attributes);
-        $this->assertEquals($attributes['eduPersonAffiliation'], array('member'));
+        $this->assertEquals($attributes['eduPersonAffiliation'], ['member']);
     }
 
 
@@ -126,31 +131,32 @@ class AttributeValueMapTest extends \PHPUnit_Framework_TestCase
      *
      * @covers SimpleSAML\Module\core\Auth\Process\AttributeValueMap::__construct
      * @covers SimpleSAML\Module\core\Auth\Process\AttributeValueMap::process
+     * @return void
      */
     public function testKeep()
     {
-        $config = array(
+        $config = [
             'sourceattribute' => 'memberOf',
             'targetattribute' => 'eduPersonAffiliation',
             '%keep',
-            'values' => array(
-                'member' => array(
+            'values' => [
+                'member' => [
                     'theGroup',
                     'otherGroup',
-                ),
-            ),
-        );
-        $request = array(
-            'Attributes' => array(
-                'memberOf' => array('theGroup'),
-                'eduPersonAffiliation' => array('someValue'),
-            ),
-        );
+                ],
+            ],
+        ];
+        $request = [
+            'Attributes' => [
+                'memberOf' => ['theGroup'],
+                'eduPersonAffiliation' => ['someValue'],
+            ],
+        ];
         $result = self::processFilter($config, $request);
         $attributes = $result['Attributes'];
         $this->assertArrayHasKey('memberOf', $attributes);
         $this->assertArrayHasKey('eduPersonAffiliation', $attributes);
-        $this->assertEquals($attributes['eduPersonAffiliation'], array('someValue','member'));
+        $this->assertEquals($attributes['eduPersonAffiliation'], ['someValue', 'member']);
     }
 
 
@@ -159,24 +165,25 @@ class AttributeValueMapTest extends \PHPUnit_Framework_TestCase
      *
      * @covers SimpleSAML\Module\core\Auth\Process\AttributeValueMap::__construct
      * @covers SimpleSAML\Module\core\Auth\Process\AttributeValueMap::process
+     * @return void
      */
     public function testUnknownFlag()
     {
-        $config = array(
+        $config = [
             '%test',
             'targetattribute' => 'affiliation',
             'sourceattribute' => 'memberOf',
-            'values' => array(
-                'member' => array(
+            'values' => [
+                'member' => [
                     'theGroup',
-                ),
-            ),
-        );
-        $request = array(
-            'Attributes' => array(
-                'memberOf' => array('theGroup'),
-            ),
-        );
+                ],
+            ],
+        ];
+        $request = [
+            'Attributes' => [
+                'memberOf' => ['theGroup'],
+            ],
+        ];
         $result = self::processFilter($config, $request);
         $this->assertArrayHasKey('affiliation', $result['Attributes']);
         $this->assertArrayNotHasKey('memberOf', $result['Attributes']);
@@ -189,24 +196,24 @@ class AttributeValueMapTest extends \PHPUnit_Framework_TestCase
      *
      * @covers SimpleSAML\Module\core\Auth\Process\AttributeValueMap::__construct
      * @covers SimpleSAML\Module\core\Auth\Process\AttributeValueMap::process
-     *
-     * @expectedException \Exception
+     * @return void
      */
     public function testMissingSourceAttribute()
     {
-        $config = array(
+        $this->expectException(\Exception::class);
+        $config = [
             'targetattribute' => 'affiliation',
-            'values' => array(
-                'member' => array(
+            'values' => [
+                'member' => [
                     'theGroup',
-                ),
-            ),
-        );
-        $request = array(
-            'Attributes' => array(
-                'memberOf' => array('theGroup'),
-            ),
-        );
+                ],
+            ],
+        ];
+        $request = [
+            'Attributes' => [
+                'memberOf' => ['theGroup'],
+            ],
+        ];
         self::processFilter($config, $request);
     }
 
@@ -216,24 +223,24 @@ class AttributeValueMapTest extends \PHPUnit_Framework_TestCase
      *
      * @covers SimpleSAML\Module\core\Auth\Process\AttributeValueMap::__construct
      * @covers SimpleSAML\Module\core\Auth\Process\AttributeValueMap::process
-     *
-     * @expectedException \Exception
+     * @return void
      */
     public function testMissingTargetAttribute()
     {
-        $config = array(
+        $this->expectException(\Exception::class);
+        $config = [
             'sourceattribute' => 'memberOf',
-            'values' => array(
-                'member' => array(
+            'values' => [
+                'member' => [
                     'theGroup',
-                ),
-            ),
-        );
-        $request = array(
-            'Attributes' => array(
-                'memberOf' => array('theGroup'),
-            ),
-        );
+                ],
+            ],
+        ];
+        $request = [
+            'Attributes' => [
+                'memberOf' => ['theGroup'],
+            ],
+        ];
         self::processFilter($config, $request);
     }
 }
